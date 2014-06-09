@@ -1,0 +1,18 @@
+# Build and Release Folders
+bin/
+bin-debug/
+bin-release/
+
+# Other files and folders
+.settings/
+
+# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
+# should NOT be excluded as they contain compiler settings and other important
+# information for Eclipse / Flash Builder.
+
+# 因不同机器上编译路径和依赖有差别，所以项目和配置文件加入ignore中
+.project
+.actionScriptProperties
+.flexProperties
+
+.svn
