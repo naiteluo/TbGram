@@ -31,7 +31,7 @@ package ui.upload
         
         private function _buildUIContent():void
         {
-            _text = new JLabel('上传中：');
+            _text = new JLabel('>_< 正在努力上传中，请耐性等待');
             contentPane.append(_text);
             _progressBar = new JProgressBar();
             contentPane.append(_progressBar);
@@ -75,8 +75,11 @@ package ui.upload
         {
             _progressBar.setValue(value);
         }
-        
-        
-        
+		
+		public function setText(value:String):void
+		{
+			_text.setText(value);
+		}
+
     }
 }

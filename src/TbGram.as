@@ -149,6 +149,7 @@ package
             _frlist.addEventListener(Event.SELECT, _frlistSelected);
                         
             stage.addEventListener(MouseEvent.CLICK, _firstClickHandler);
+//			stage.addEventListener(MouseEvent.MOUSE_OVER, _mouseOverHanlder);
             
         }
         
@@ -274,7 +275,7 @@ package
         {
             _sticksTabContainer = new JPanel();
             _sticksTabContainer.setPreferredWidth(238);
-            _sticksTabContainer.setPreferredHeight(500);
+            _sticksTabContainer.setPreferredHeight(540);
             //饰品管理
             _stickerUIManager = new StickerUIManager(_viewport, _sticksTabContainer, _sticksConfigURL);
             
@@ -385,6 +386,17 @@ package
             var activeItem:ImageItem = _nav.getItemAt(_nav.active);
             activeItem.setSource(_viewport.getOriginalSourceCopyAt(0));
         }
+		
+		// -------- 提供鼠标hover的回掉 ----
+		private function _mouseOverHanlder(evt:Event):void
+		{
+			debug('mouseover');
+		}
+		
+		private function _mouseOutHanlder(evt:Event):void
+		{
+			debug('mouseout');
+		}
 
         // -------- 第一次点击，上传 ------
                 

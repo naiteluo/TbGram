@@ -60,15 +60,12 @@ package ui.sticker
         private function _buildTab():void
         {
             _stickerHandlers = new SticksListPanel(new FlowAutoHeightLayout(FlowWrapLayout.LEFT, 3, 3, true));            
-            _stickerHandlers.setBorder(new LineBorder(null, new ASColor(0x000077), 1));
+//            _stickerHandlers.setBorder(new LineBorder(null, new ASColor(0x000077), 1));
             
             _stickerHandlers.setPreferredHeight(500);
             _stickerHandlers.setPreferredWidth(224);
             
-            _sticksScrollPanel = new MyScrollPane(_stickerHandlers, JScrollPane.SCROLLBAR_AS_NEEDED, JScrollPane.SCROLLBAR_NEVER);
-            
-            _sticksScrollPanel.setBorder(new LineBorder(null, new ASColor(0x007700), 1));
-            
+            _sticksScrollPanel = new MyScrollPane(_stickerHandlers, JScrollPane.SCROLLBAR_AS_NEEDED, JScrollPane.SCROLLBAR_NEVER);            
             
             _tabPanel = new StickerTabedPane(_configs);
                         
@@ -76,7 +73,7 @@ package ui.sticker
                 _tabPanel.appendTab(_sticksScrollPanel, _configs[i].tabName);
             }
             
-            _tabPanel.setBorder(new LineBorder(null, new ASColor(0x660000), 2));
+//            _tabPanel.setBorder(new LineBorder(null, new ASColor(0x660000), 2));
             _tabPanel.setPreferredHeight(500);
             _tabPanel.setHeight(500);
             _tabPanel.setMaximumHeight(600);

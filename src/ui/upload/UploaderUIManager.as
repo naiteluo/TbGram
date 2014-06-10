@@ -87,7 +87,7 @@ package ui.upload
         private function _showDialog():void
         {
             _viewport.stage.addChild(_uploadDialog);
-            
+            _uploadDialog.setText('>0< 上传完毕，点击确定插入图片~');
         }
         
         private function _initUpload():void
