@@ -5,7 +5,6 @@ package
     import com.imagelib.ui.Clipper;
     
     import flash.display.BitmapData;
-    import flash.display.JPEGEncoderOptions;
     import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.MouseEvent;
@@ -14,7 +13,6 @@ package
     import flash.net.FileFilter;
     import flash.net.FileReferenceList;
     import flash.system.Security;
-    import flash.utils.ByteArray;
     import flash.utils.setTimeout;
     
     import layout.FlowAutoHeightLayout;
@@ -36,7 +34,6 @@ package
     import org.aswing.LoadIcon;
     import org.aswing.SoftBoxLayout;
     import org.aswing.border.EmptyBorder;
-    import org.aswing.border.LineBorder;
     import org.aswing.border.SideLineBorder;
     
     import ui.ImageNav;
