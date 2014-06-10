@@ -11,6 +11,7 @@ package
     import flash.events.MouseEvent;
     import flash.external.ExternalInterface;
     import flash.geom.Rectangle;
+    import flash.net.FileFilter;
     import flash.net.FileReferenceList;
     import flash.system.Security;
     import flash.utils.ByteArray;
@@ -54,13 +55,13 @@ package
     [SWF(backgroundColor="#ffffff", frameRate="48")]
     public class TbGram extends Sprite
     {
+        private static const _FILE_FILTERS:String = "*.jpg;*.gif;*.png";
         
+//        private var _filterConfigURL:String;
+        private var _filterConfigURL:String = '/tb/static-common/htmlfilter/filterconf.js';
         
-        private var _filterConfigURL:String;
-        //private var _configURL:String = '/tb/static-common/htmlfilter/filterconf.js';
-        
-        private var _sticksConfigURL:String;
-        //		private var _sticksConfigURL:String = '/tb/static-common/sticks/sticks_conf.js';
+//        private var _sticksConfigURL:String;
+        private var _sticksConfigURL:String = '/tb/static-common/sticks/sticks_tabs_conf.js';
         
         private var _reviewURL:String;
         //private var _reviewURL:String = '/tb/static-common/htmlfilter/previewer.png';
@@ -68,7 +69,7 @@ package
         private var _maxSize:Number;		//允许上传的最大容量
         private var _maxWidth:Number;		//最大宽度
         private var _maxHeight:Number;		//最大高度
-        private var _uploadURL:String;		//上传URL
+        private var _uploadUrl:String;		//上传URL
         private var _imageURL:String;		//默认加载的图片
         
         private var _completeInterface:String;	//上传成功的页面接口
@@ -124,14 +125,34 @@ package
          */
         private var _frlist:FileReferenceList;
         
+        
+        private var _resizeInterface:String;
+        private var _uploadedInterface:String;
+        private var _closeInterface:String;
+        
         public function TbGram()
         {
             stage.scaleMode = 'noScale';
             stage.align = 'LT';
-            Security.allowDomain("*"); 
+            Security.allowDomain("*");
             
-            //IE下 防止缓存导致UI渲染错误问题
-            setTimeout(_addToStage, 100);
+            _completeInterface = _interfaceFilter(this.loaderInfo.parameters.upload_complete) || 'upload_complete';
+            _compressInterface = _interfaceFilter(this.loaderInfo.parameters.compress_complete) || 'compress_complete';
+            _errorInterface = _interfaceFilter(this.loaderInfo.parameters.upload_error) || 'upload_error';
+            _loadErrorInterface = _interfaceFilter(this.loaderInfo.parameters.load_error) || 'load_error';
+            
+            _resizeInterface = _interfaceFilter(this.loaderInfo.parameters.onResize) || 'onResize';
+            _uploadedInterface = _interfaceFilter(this.loaderInfo.parameters.onUploaded) || 'onUploaded';
+            _closeInterface = _interfaceFilter(this.loaderInfo.parameters.onClose) || 'onClose';
+            
+            
+            debug(this.loaderInfo.parameters);
+            
+            _frlist = new FileReferenceList;
+            _frlist.addEventListener(Event.SELECT, _frlistSelected);
+                        
+            stage.addEventListener(MouseEvent.CLICK, _firstClickHandler);
+            
         }
         
         private function _addToStage(evt:Event=null):void
@@ -141,22 +162,17 @@ package
                 setTimeout(arguments.callee, 50);
             }else{
                 //配置文件
-                _filterConfigURL = this.loaderInfo.parameters.configURL || '../filters/filters_conf.js';
+//                _filterConfigURL = this.loaderInfo.parameters.configURL || '../filters/filters_conf.js';
                 
                 // 饰品配置文件
-                _sticksConfigURL = this.loaderInfo.parameters.sticksConfigURL || '../sticks/sticks_tabs_conf.js';
+//                _sticksConfigURL = this.loaderInfo.parameters.sticksConfigURL || '../sticks/sticks_tabs_conf.js';
                 
                 _maxSize = this.loaderInfo.parameters.maxSize || 5;
                 _maxHeight = this.loaderInfo.parameters.maxHeight || 3000;
                 _maxWidth = this.loaderInfo.parameters.maxWidth || 3000;
-                _uploadURL = this.loaderInfo.parameters.uploadURL || '/upload';
+                _uploadUrl = this.loaderInfo.parameters.uploadUrl || '/upload';
                 _imageURL = this.loaderInfo.parameters.imageURL || null;
                 _iconPath = this.loaderInfo.parameters.iconPath || '../images/';
-                
-                _completeInterface = _interfaceFilter(this.loaderInfo.parameters.upload_complete) || 'upload_complete';
-                _compressInterface = _interfaceFilter(this.loaderInfo.parameters.compress_complete) || 'compress_complete';
-                _errorInterface = _interfaceFilter(this.loaderInfo.parameters.upload_error) || 'upload_error';
-                _loadErrorInterface = _interfaceFilter(this.loaderInfo.parameters.load_error) || 'load_error';
                 
                 _buildLayout();
                 _buildPreviewer();
@@ -172,6 +188,11 @@ package
         }
         
         //________________build ui___________________
+        
+        private function _buildUI():void
+        {
+            
+        }
         
         private function _buildLayout():void
         {
@@ -202,11 +223,11 @@ package
             pane.append(_top, BorderLayout.NORTH);
             pane.append(_center, BorderLayout.CENTER);
             pane.append(_left, BorderLayout.WEST);
-            
+                 
             _mainWindow.setSizeWH(stage.stageWidth, stage.stageHeight);
             _mainWindow.show();
-            
         }
+        
         private function _buildPreviewer():void
         {
             _viewport = new Viewport();
@@ -228,7 +249,9 @@ package
             _submitBtn.setBorder(new EmptyBorder(null, new Insets(5, 75, 5, 10)));
             _submitBar.append(_submitBtn);
             
-            _uploadUIManager = new UploaderUIManager(_viewport, _nav, _submitBtn);
+            _uploadUIManager = new UploaderUIManager(_viewport, _nav, _submitBtn, _uploadUrl);
+            
+            _uploadUIManager.addEventListener(UploaderUIManager.ALL_UPLOADED, _allUploadedHandler);
         }
         
         /**
@@ -253,13 +276,8 @@ package
         private function _buildSticks():void
         {
             _sticksTabContainer = new JPanel();
-            
             _sticksTabContainer.setPreferredWidth(238);
-            _sticksTabContainer.setPreferredHeight(300);
-            _sticksTabContainer.setHeight(200);
-            _sticksTabContainer.setBorder(new LineBorder(null, new ASColor(0x000000), 2));
-            
-            
+            _sticksTabContainer.setPreferredHeight(500);
             //饰品管理
             _stickerUIManager = new StickerUIManager(_viewport, _sticksTabContainer, _sticksConfigURL);
             
@@ -366,11 +384,47 @@ package
          */
         private function _previewChangeHandler(evt:Event):void
         {
-            //改变图片列表中的数据存储
+            // 改变图片列表中的数据存储
             var activeItem:ImageItem = _nav.getItemAt(_nav.active);
             activeItem.setSource(_viewport.getOriginalSourceCopyAt(0));
         }
 
+        // -------- 第一次点击，上传 ------
+                
+        private function _firstClickHandler(evt:Event):void
+        {
+            _frlist.browse([new FileFilter('images', _FILE_FILTERS)]);
+        }
+        
+        private function _frlistSelected(evt:Event):void
+        {
+            stage.removeEventListener(MouseEvent.CLICK, _firstClickHandler);
+            ExternalInterface.call(_resizeInterface);
+            setTimeout(_showWindow, 100);
+        }
+        
+        private function _showWindow():void
+        {  
+            _addToStage();
+            _nav.addSourceList(_frlist.fileList);
+        }
+        
+        // ---------- 上传完成，回调页面中的处理函数 -----
+        
+        private function _allUploadedHandler(evt:Event):void
+        {
+            debug('here1');
+            debug(_uploadedInterface);
+            var target:UploaderUIManager = evt.target as UploaderUIManager;
+            ExternalInterface.call(_uploadedInterface, target.responseObj);
+//            ExternalInterface.call(_closeInterface);
+        }
+        
+        private function debug(message:* = 'debug!'):void
+        {
+            ExternalInterface.call('console.log', message);
+        }
+        
     }
 }
 

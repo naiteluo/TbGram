@@ -29,7 +29,7 @@ package ui.sticker
             }
             curr.changeStatus(SimpleTab.STATUS_ACTIVE);
             curr.target.setVisible(true);
-            curr.target.setBorder(new EmptyBorder(null, new Insets(10, 20, 10, 20)));
+            curr.target.setBorder(new EmptyBorder(null, new Insets(0, 0, 0, 0)));
             
             _addItems(title);
             
@@ -42,13 +42,15 @@ package ui.sticker
         {
             var list:SticksListPanel = _tablist[title]['container'].getViewportView() as SticksListPanel;
             list.removeAll();
+            list.doLayout();
             for (var i:int = 0; i < _configs.length; i++) {
                 if (_configs[i].tabName == title) {
                     for(var j:int, len:int = _configs[i].tabContents.length; j < len; j ++){
         				var item:StickItem = new StickItem(_configs[i].tabContents[j]);
                         list.append(item);
         			}
-                    list.revalidate();
+                    list.doLayout();
+//                    list.setPreferredHeight(300);
                 }
             }
         }

@@ -59,29 +59,32 @@ package ui.sticker
          */
         private function _buildTab():void
         {
-            _stickerHandlers = new SticksListPanel(new FlowAutoHeightLayout(FlowWrapLayout.LEFT, 7, 7, true));
-            _stickerHandlers.setPreferredWidth(238);
+            _stickerHandlers = new SticksListPanel(new FlowAutoHeightLayout(FlowWrapLayout.LEFT, 3, 3, true));            
+            _stickerHandlers.setBorder(new LineBorder(null, new ASColor(0x000077), 1));
             
-            _stickerHandlers.setBorder(new LineBorder(null, new ASColor(0x000000), 2));
+            _stickerHandlers.setPreferredHeight(500);
+            _stickerHandlers.setPreferredWidth(224);
             
             _sticksScrollPanel = new MyScrollPane(_stickerHandlers, JScrollPane.SCROLLBAR_AS_NEEDED, JScrollPane.SCROLLBAR_NEVER);
-            _sticksScrollPanel.setPreferredWidth(238);
-            _sticksScrollPanel.setBorder(new LineBorder(null, new ASColor(0x000000), 2));
+            
+            _sticksScrollPanel.setBorder(new LineBorder(null, new ASColor(0x007700), 1));
+            
             
             _tabPanel = new StickerTabedPane(_configs);
-            
-            
+                        
             for(var i:int, len:int = _configs.length; i < len; i ++){
                 _tabPanel.appendTab(_sticksScrollPanel, _configs[i].tabName);
             }
-            _tabPanel.setHeight(100);
-            _tabPanel.setWidth(100);
+            
             _tabPanel.setBorder(new LineBorder(null, new ASColor(0x660000), 2));
+            _tabPanel.setPreferredHeight(500);
+            _tabPanel.setHeight(500);
+            _tabPanel.setMaximumHeight(600);
+            
             _tabContainer.append(_tabPanel);
             
-                        
-			_stickerHandlers.doLayout();
-			_stickerHandlers.setPreferredHeight(300);
+            _stickerHandlers.doLayout();
+            
 			_stickerHandlers.addEventListener(SticksListPanel.ITEM_CLICK, _stickActiveHandler);
             
         }

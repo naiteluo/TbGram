@@ -3,6 +3,7 @@ package ui.upload
     import com.imagelib.ImageDataUploaderGroup;
     
     import flash.display.BitmapData;
+    import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.MouseEvent;
     import flash.geom.Rectangle;
@@ -13,8 +14,10 @@ package ui.upload
     import ui.basic.MyButton;
     import ui.viewport.Viewport;
 
-    public class UploaderUIManager
+    public class UploaderUIManager extends Sprite
     {
+        public static const ALL_UPLOADED:String = 'all_uploaded';
+        
         // ui 
         private var _viewport:Viewport;
         private var _imageNav:ImageNav;
@@ -24,12 +27,16 @@ package ui.upload
         private var _uploaderGroup:ImageDataUploaderGroup;
         private var totalCount:int;
         private var uploadedCount:int;
+        private var _uploadUrl:String;
+        
+        private var _responseObj:Object = {};
       
-        public function UploaderUIManager(target:Viewport, imageNav:ImageNav, uploadBtn:MyButton)
+        public function UploaderUIManager(target:Viewport, imageNav:ImageNav, uploadBtn:MyButton, uploadUrl:String)
         {
             _viewport = target;
             _imageNav = imageNav;
             _uploadBtn = uploadBtn;
+            _uploadUrl = uploadUrl;
             _uploaderGroup = new ImageDataUploaderGroup();
             
             _initDialog();
@@ -46,6 +53,8 @@ package ui.upload
         private function _okHandler(evt:Event):void
         {
             _hideDialog();
+            _responseObj = _uploaderGroup.response;
+            this.dispatchEvent(new Event(ALL_UPLOADED));
         }
         
         private function _cancelHandler(evt:Event):void
@@ -93,10 +102,11 @@ package ui.upload
                 imageItem = _imageNav.getItemAt(i);
                 imageData = imageItem.originalBitmapData;
                 byteArray = _convertImageData(imageData);
-                _uploaderGroup.addUploader('file' + i, imageData, 'upload.php');
+                _uploaderGroup.addUploader('file' + i, imageData, _uploadUrl);
             }
             
             _uploaderGroup.addEventListener(ImageDataUploaderGroup.EVENT_ALL_COMPLETE, _uploadCompleteHandler);
+            _uploaderGroup.addEventListener(ImageDataUploaderGroup.EVENT_ONE_COMPLETE, _uploadOneCompleteHandler)
             _uploaderGroup.startUpload();
         }
         
@@ -105,16 +115,29 @@ package ui.upload
             _uploadDialog.showOkBtn();
         }
         
+        private function _uploadOneCompleteHandler(evt:Event):void
+        {
+            uploadedCount ++;
+            _uploadDialog.setProgressBar(Math.round(100 * uploadedCount / totalCount));
+        }
+        
         private function _convertImageData(imageData:*):ByteArray
         {
             var _fileData:ByteArray = new ByteArray();
+            
             if(imageData is BitmapData){
                 var data:BitmapData = (imageData as BitmapData);
                 imageData.copyPixelsToByteArray(new Rectangle(0, 0, data.width, data.height), _fileData);
             }else if(imageData is ByteArray){
                 _fileData = imageData;
             }
+            
             return _fileData;
+        }
+        
+        public function get responseObj():Object 
+        {
+            return _responseObj
         }
         
     }
