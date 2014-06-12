@@ -48,17 +48,18 @@ package
     import ui.upload.UploaderUIManager;
     import ui.viewport.Viewport;
     import ui.viewport.ViewportEvent;
+    import ui.basic.MySubmitButton;
     
     [SWF(backgroundColor="#ffffff", frameRate="48")]
     public class TbGram extends Sprite
     {
         private static const _FILE_FILTERS:String = "*.jpg;*.gif;*.png";
         
-//        private var _filterConfigURL:String;
-        private var _filterConfigURL:String = '/tb/static-common/htmlfilter/filterconf.js';
+        private var _filterConfigURL:String;
+//        private var _filterConfigURL:String = '/tb/static-common/htmlfilter/filterconf.js';
         
-//        private var _sticksConfigURL:String;
-        private var _sticksConfigURL:String = '/tb/static-common/sticks/sticks_tabs_conf.js';
+        private var _sticksConfigURL:String;
+//        private var _sticksConfigURL:String = '/tb/static-common/sticks/sticks_tabs_conf.js';
         
         private var _reviewURL:String;
         //private var _reviewURL:String = '/tb/static-common/htmlfilter/previewer.png';
@@ -98,7 +99,7 @@ package
          * 上传 
          */
         private var _submitBar:JPanel;
-        private var _submitBtn:MyButton;
+        private var _submitBtn:MySubmitButton;
         private var _uploaderGroup:ImageDataUploaderGroup;
         private var _uploadUIManager:UploaderUIManager;
 
@@ -142,9 +143,7 @@ package
             _uploadedInterface = _interfaceFilter(this.loaderInfo.parameters.onUploaded) || 'onUploaded';
             _closeInterface = _interfaceFilter(this.loaderInfo.parameters.onClose) || 'onClose';
             
-            
-            debug(this.loaderInfo.parameters);
-            
+                        
             _frlist = new FileReferenceList;
             _frlist.addEventListener(Event.SELECT, _frlistSelected);
                         
@@ -160,10 +159,10 @@ package
                 setTimeout(arguments.callee, 50);
             }else{
                 //配置文件
-//                _filterConfigURL = this.loaderInfo.parameters.configURL || '../filters/filters_conf.js';
+                _filterConfigURL = this.loaderInfo.parameters.filterconfigURL || '../filters/filters_conf.js';
                 
                 // 饰品配置文件
-//                _sticksConfigURL = this.loaderInfo.parameters.sticksConfigURL || '../sticks/sticks_tabs_conf.js';
+                _sticksConfigURL = this.loaderInfo.parameters.sticksConfigURL || '../sticks/sticks_tabs_conf.js';
                 
                 _maxSize = this.loaderInfo.parameters.maxSize || 5;
                 _maxHeight = this.loaderInfo.parameters.maxHeight || 3000;
@@ -243,8 +242,8 @@ package
             _submitBar.setBackground(new ASColor(0x393a3c, 0.9));
             _submitBar.setOpaque(true);
             _submitBar.setBorder(new SideLineBorder(new EmptyBorder(null, new Insets(0, 0, 0, 0)), 4, new ASColor(0x585858, 1), 1));
-            _submitBtn = new MyButton('上传');
-            _submitBtn.setBorder(new EmptyBorder(null, new Insets(5, 75, 5, 10)));
+            _submitBtn = new MySubmitButton('上传');
+            _submitBtn.setBorder(new EmptyBorder(null, new Insets(5, 50, 5, 10)));
             _submitBar.append(_submitBtn);
             
             _uploadUIManager = new UploaderUIManager(_viewport, _nav, _submitBtn, _uploadUrl);
@@ -390,12 +389,12 @@ package
 		// -------- 提供鼠标hover的回掉 ----
 		private function _mouseOverHanlder(evt:Event):void
 		{
-			debug('mouseover');
+
 		}
 		
 		private function _mouseOutHanlder(evt:Event):void
 		{
-			debug('mouseout');
+
 		}
 
         // -------- 第一次点击，上传 ------
@@ -422,8 +421,7 @@ package
         
         private function _allUploadedHandler(evt:Event):void
         {
-            debug('here1');
-            debug(_uploadedInterface);
+
             var target:UploaderUIManager = evt.target as UploaderUIManager;
             ExternalInterface.call(_uploadedInterface, target.responseObj);
 //            ExternalInterface.call(_closeInterface);

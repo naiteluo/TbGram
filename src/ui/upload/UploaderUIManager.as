@@ -11,7 +11,7 @@ package ui.upload
     
     import ui.ImageNav;
     import ui.basic.ImageItem;
-    import ui.basic.MyButton;
+    import ui.basic.MySubmitButton;
     import ui.viewport.Viewport;
 
     public class UploaderUIManager extends Sprite
@@ -21,7 +21,7 @@ package ui.upload
         // ui 
         private var _viewport:Viewport;
         private var _imageNav:ImageNav;
-        private var _uploadBtn:MyButton;
+        private var _uploadBtn:MySubmitButton;
         private var _uploadDialog:UploadDialog;
         
         private var _uploaderGroup:ImageDataUploaderGroup;
@@ -31,7 +31,7 @@ package ui.upload
         
         private var _responseObj:Object = {};
       
-        public function UploaderUIManager(target:Viewport, imageNav:ImageNav, uploadBtn:MyButton, uploadUrl:String)
+        public function UploaderUIManager(target:Viewport, imageNav:ImageNav, uploadBtn:MySubmitButton, uploadUrl:String)
         {
             _viewport = target;
             _imageNav = imageNav;

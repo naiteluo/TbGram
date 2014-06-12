@@ -33,6 +33,7 @@ package ui.sticker
             
             _addItems(title);
             
+			_containers.setPreferredHeight(500);
             setPreferredHeight(curr.target.getPreferredHeight() + _tabs.getPreferredHeight());
             curr.target.setPreferredHeight(_containers.getPreferredHeight());
             _containers.revalidate();
