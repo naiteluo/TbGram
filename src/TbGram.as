@@ -1,68 +1,65 @@
 package
 {
-    import com.imagelib.ImageDataUploader;
-    import com.imagelib.ImageDataUploaderGroup;
-    import com.imagelib.ui.Clipper;
-    
-    import flash.display.BitmapData;
-    import flash.display.Sprite;
-    import flash.events.Event;
-    import flash.events.MouseEvent;
-    import flash.external.ExternalInterface;
-    import flash.geom.Rectangle;
-    import flash.net.FileFilter;
-    import flash.net.FileReferenceList;
-    import flash.system.Security;
-    import flash.utils.setTimeout;
-    
-    import layout.FlowAutoHeightLayout;
-    
-    import org.aswing.ASColor;
-    import org.aswing.ASFont;
-    import org.aswing.AsWingConstants;
-    import org.aswing.AsWingManager;
-    import org.aswing.BorderLayout;
-    import org.aswing.Container;
-    import org.aswing.FlowWrapLayout;
-    import org.aswing.Insets;
-    import org.aswing.JButton;
-    import org.aswing.JLabelButton;
-    import org.aswing.JList;
-    import org.aswing.JPanel;
-    import org.aswing.JScrollPane;
-    import org.aswing.JWindow;
-    import org.aswing.LoadIcon;
-    import org.aswing.SoftBoxLayout;
-    import org.aswing.border.EmptyBorder;
-    import org.aswing.border.SideLineBorder;
-    
-    import ui.ImageNav;
-    import ui.SimpleTabedPane;
-    import ui.basic.ImageItem;
-    import ui.basic.MyButton;
-    import ui.basic.MyScrollPane;
-    import ui.filter.FilterListPanel;
-    import ui.filter.FilterUIManager;
-    import ui.sticker.StickerUIManager;
-    import ui.sticker.SticksListPanel;
-    import ui.upload.UploaderUIManager;
-    import ui.viewport.Viewport;
-    import ui.viewport.ViewportEvent;
-    import ui.basic.MySubmitButton;
+	import com.imagelib.ImageDataUploader;
+	import com.imagelib.ImageDataUploaderGroup;
+	import com.imagelib.ui.Clipper;
+	
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.external.ExternalInterface;
+	import flash.geom.Rectangle;
+	import flash.net.FileFilter;
+	import flash.net.FileReferenceList;
+	import flash.system.Security;
+
+	import flash.utils.setTimeout;
+	
+	import layout.FlowAutoHeightLayout;
+	
+	import org.aswing.ASColor;
+	import org.aswing.ASFont;
+	import org.aswing.AsWingConstants;
+	import org.aswing.AsWingManager;
+	import org.aswing.BorderLayout;
+	import org.aswing.Container;
+	import org.aswing.FlowWrapLayout;
+	import org.aswing.Insets;
+	import org.aswing.JButton;
+	import org.aswing.JLabelButton;
+	import org.aswing.JList;
+	import org.aswing.JPanel;
+	import org.aswing.JScrollPane;
+	import org.aswing.JWindow;
+	import org.aswing.LoadIcon;
+	import org.aswing.SoftBoxLayout;
+	import org.aswing.border.EmptyBorder;
+	import org.aswing.border.SideLineBorder;
+	import org.aswing.geom.IntDimension;
+	
+	import ui.ImageNav;
+	import ui.SimpleTabedPane;
+	import ui.basic.ImageItem;
+	import ui.basic.MyScrollPane;
+	import ui.basic.MySubmitButton;
+	import ui.filter.FilterListPanel;
+	import ui.filter.FilterUIManager;
+	import ui.sticker.StickerUIManager;
+	import ui.sticker.SticksListPanel;
+	import ui.upload.UploaderUIManager;
+	import ui.viewport.Viewport;
+	import ui.viewport.ViewportEvent;
     
     [SWF(backgroundColor="#ffffff", frameRate="48")]
     public class TbGram extends Sprite
     {
         private static const _FILE_FILTERS:String = "*.jpg;*.gif;*.png";
         
-        private var _filterConfigURL:String;
-//        private var _filterConfigURL:String = '/tb/static-common/htmlfilter/filterconf.js';
-        
-        private var _sticksConfigURL:String;
-//        private var _sticksConfigURL:String = '/tb/static-common/sticks/sticks_tabs_conf.js';
-        
-        private var _reviewURL:String;
-        //private var _reviewURL:String = '/tb/static-common/htmlfilter/previewer.png';
+        private var _filterConfigURL:String; // 线上地址：'/tb/static-common/htmlfilter/filterconf.js';     
+        private var _sticksConfigURL:String; // 线上地址：'/tb/static-common/sticks/sticks_tabs_conf.js';
+
         private var _iconPath:String;		//UI图标路径
         private var _maxSize:Number;		//允许上传的最大容量
         private var _maxWidth:Number;		//最大宽度
@@ -102,7 +99,11 @@ package
         private var _submitBtn:MySubmitButton;
         private var _uploaderGroup:ImageDataUploaderGroup;
         private var _uploadUIManager:UploaderUIManager;
-
+		
+		private var _upperContainer:JWindow;
+		private var _closeBtn:JPanel;
+		[Embed (source="../images/close_btn.png")]
+		private static var CloseBtnBg:Class;
         
         /**
          * 滤镜
@@ -127,6 +128,8 @@ package
         private var _resizeInterface:String;
         private var _uploadedInterface:String;
         private var _closeInterface:String;
+		private var _mouseOverInterface:String;
+		private var _mouseOutInterface:String;
         
         public function TbGram()
         {
@@ -141,17 +144,32 @@ package
             
             _resizeInterface = _interfaceFilter(this.loaderInfo.parameters.onResize) || 'onResize';
             _uploadedInterface = _interfaceFilter(this.loaderInfo.parameters.onUploaded) || 'onUploaded';
-            _closeInterface = _interfaceFilter(this.loaderInfo.parameters.onClose) || 'onClose';
-            
-                        
+            _closeInterface = _interfaceFilter(this.loaderInfo.parameters.onClose) || 'onClose'; 
+			_mouseOverInterface = _interfaceFilter(this.loaderInfo.parameters.onMouseOver) || 'onMouseOver';
+			_mouseOutInterface = _interfaceFilter(this.loaderInfo.parameters.onMouseOut) || 'onMouseOut';
+			
+			if (this.loaderInfo.parameters.debugMode) {
+				debug(this.loaderInfo.parameters);
+			}
+			
             _frlist = new FileReferenceList;
             _frlist.addEventListener(Event.SELECT, _frlistSelected);
                         
             stage.addEventListener(MouseEvent.CLICK, _firstClickHandler);
-//			stage.addEventListener(MouseEvent.MOUSE_OVER, _mouseOverHanlder);
-            
+			stage.addEventListener(MouseEvent.MOUSE_MOVE, _fisrtMouseOverHandler);
+			stage.addEventListener(MouseEvent.MOUSE_OUT, _fisrtMouseOutHandler)
         }
-        
+		
+		protected function _fisrtMouseOverHandler(event:MouseEvent):void
+		{
+			ExternalInterface.call(_mouseOverInterface);
+		}
+		
+		protected function _fisrtMouseOutHandler(event:MouseEvent):void
+		{
+			ExternalInterface.call(_mouseOutInterface);
+		}
+		
         private function _addToStage(evt:Event=null):void
         {
             
@@ -179,6 +197,7 @@ package
                 _buildNav();
                 _buildSubmitBar();
                 _buildTools();
+				_buildCloseBtn();
                 
                 _viewport.addEventListener(ViewportEvent.CHANGE, _previewChangeHandler);
             }
@@ -194,7 +213,7 @@ package
         private function _buildLayout():void
         {
             var bgColor:ASColor = new ASColor(0x000000, 0.85);
-            AsWingManager.initAsStandard( this);
+            AsWingManager.initAsStandard(this);
             _mainWindow = new JWindow();
             
             var pane:Container = _mainWindow.getContentPane();
@@ -220,7 +239,7 @@ package
             pane.append(_top, BorderLayout.NORTH);
             pane.append(_center, BorderLayout.CENTER);
             pane.append(_left, BorderLayout.WEST);
-                 
+           	      
             _mainWindow.setSizeWH(stage.stageWidth, stage.stageHeight);
             _mainWindow.show();
         }
@@ -243,12 +262,13 @@ package
             _submitBar.setOpaque(true);
             _submitBar.setBorder(new SideLineBorder(new EmptyBorder(null, new Insets(0, 0, 0, 0)), 4, new ASColor(0x585858, 1), 1));
             _submitBtn = new MySubmitButton('上传');
-            _submitBtn.setBorder(new EmptyBorder(null, new Insets(5, 50, 5, 10)));
+            _submitBtn.setBorder(new EmptyBorder(null, new Insets(5, 50, 5, 0)));
             _submitBar.append(_submitBtn);
             
             _uploadUIManager = new UploaderUIManager(_viewport, _nav, _submitBtn, _uploadUrl);
             
             _uploadUIManager.addEventListener(UploaderUIManager.ALL_UPLOADED, _allUploadedHandler);
+			
         }
         
         /**
@@ -424,9 +444,28 @@ package
 
             var target:UploaderUIManager = evt.target as UploaderUIManager;
             ExternalInterface.call(_uploadedInterface, target.responseObj);
-//            ExternalInterface.call(_closeInterface);
         }
-        
+		
+		private function _buildCloseBtn():void
+		{
+			_closeBtn = new JPanel();
+			_closeBtn.buttonMode = true;
+			_closeBtn.setSizeWH(44, 44);
+			_closeBtn.setPreferredSize(new IntDimension(44, 44));
+			_closeBtn.setOpaque(true);
+			_closeBtn.setBackground(new ASColor(0x393a3c, 0.9))
+			_closeBtn.addChild((new CloseBtnBg) as Bitmap);
+			
+			_closeBtn.addEventListener(MouseEvent.CLICK, _closeHandler);
+			
+			_top.append(_closeBtn, BorderLayout.EAST);
+		}
+		
+		private function _closeHandler(evt:Event):void
+		{
+			ExternalInterface.call(_closeInterface);
+		}
+		
         private function debug(message:* = 'debug!'):void
         {
             ExternalInterface.call('console.log', message);

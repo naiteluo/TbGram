@@ -13,7 +13,7 @@ package ui.sticker
 			_config = config;
 			_name = config.name;
 			
-			super(config.url, 65, 65, false, 'in', 0xb1b1b1, 1, 0, 0, 0, .8, .9, 1, 0);
+			super(config.url_preview, 65, 65, false, 'in', 0xb1b1b1, 1, 0, 0, 0, .8, .9, 1, 0);
 		}
 		
 		public function get stickConfig():Object

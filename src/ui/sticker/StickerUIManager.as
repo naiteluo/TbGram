@@ -20,6 +20,7 @@ package ui.sticker
 	import ui.basic.MyScrollPane;
 	import ui.sticker.Sticker;
 	import ui.sticker.StickerDialog;
+	import ui.sticker.StickerTabedPane;
 	import ui.viewport.Viewport;
 
 	public class StickerUIManager
@@ -66,7 +67,7 @@ package ui.sticker
             _stickerHandlers.setPreferredWidth(224);
             
             _sticksScrollPanel = new MyScrollPane(_stickerHandlers, JScrollPane.SCROLLBAR_AS_NEEDED, JScrollPane.SCROLLBAR_NEVER);            
-            
+
             _tabPanel = new StickerTabedPane(_configs);
                         
             for(var i:int, len:int = _configs.length; i < len; i ++){

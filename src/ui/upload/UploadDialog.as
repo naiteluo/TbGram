@@ -3,13 +3,13 @@ package ui.upload
     import flash.events.Event;
     import flash.events.MouseEvent;
     
+    import org.aswing.Insets;
     import org.aswing.JLabel;
     import org.aswing.JProgressBar;
     import org.aswing.border.EmptyBorder;
     
     import ui.basic.MyButton;
     import ui.basic.MyDialog;
-    import org.aswing.Insets;
     
     public class UploadDialog extends MyDialog
     {
@@ -26,9 +26,14 @@ package ui.upload
         {
             super(titleText, width, height);
             _buildUIContent();
-            super.setLocation(400, 280);
+			this.addEventListener(Event.ADDED_TO_STAGE, _addedHandler);
         }
-        
+		
+		protected function _addedHandler(event:Event):void
+		{
+			super.setLocation((this.stage.width - width) / 2, (this.stage.height - height) / 2);			
+		}
+		
         private function _buildUIContent():void
         {
             _text = new JLabel('>_< 正在努力上传中，请耐性等待');
