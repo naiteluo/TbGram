@@ -49,10 +49,13 @@ package ui.basic{
 			
 			_dragAble = dragAble;
 			
+            
 			popup = new JPopup();
 			popup.show();
 			popup.setLayout(new BorderLayout);
 			popup.setSizeWH(width + 2, height + 2);
+            // 防止popup遮挡底下元素无法点击
+            popup.setLocationXY(-width, -height);
 			pane = new JPanel();
 			pane.setLayout(new BorderLayout());
 			pane.setBorder(new LineBorder(null, new ASColor(0x0, 1), 1, 0));
