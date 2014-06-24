@@ -14,7 +14,7 @@ package
 	import flash.net.FileFilter;
 	import flash.net.FileReferenceList;
 	import flash.system.Security;
-
+	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
 	import layout.FlowAutoHeightLayout;
@@ -394,7 +394,12 @@ package
         {
             var activeItem:ImageItem = _nav.getItemAt(_nav.active);
             var bd:BitmapData = activeItem.originalBitmapData;
-            _viewport.setSource(bd, 0, bd.width, bd.height, true);
+            var ba:ByteArray = activeItem.originalByteArray;
+            if (activeItem.isGIF) {
+                _viewport.setSourceOfGIF(ba, bd, 0, bd.width, bd.height, true);
+            } else {
+                _viewport.setSource(bd, 0, bd.width, bd.height, true);
+            }
         }
         /**
          * 监听图像预览区的图片数据变化

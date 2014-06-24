@@ -105,6 +105,12 @@
                     "title": "翅膀",
                     "url": "../sticks/resource/hats/wings.png",
                     "url_preview": "../sticks/resource/hats/wings_p_.png"
+                },
+                {
+                    "name": "xintangai",
+                    "title": "xintangai",
+                    "url": "../sticks/resource/hats/xintangai.gif",
+                    "url_preview": "../sticks/resource/hats/xintangai.gif"
                 }
             ]
         },

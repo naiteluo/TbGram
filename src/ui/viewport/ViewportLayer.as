@@ -8,6 +8,7 @@ package ui.viewport
 	import flash.events.Event;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	import flash.utils.ByteArray;
 	
 	import ui.viewport.ViewportEvent;
 
@@ -22,6 +23,7 @@ package ui.viewport
 		
 		private var _backgroundViewer:Bitmap;				//背景显示图
 		private var _originalSource:BitmapData;				//原图数据
+        private var _priginalSourceOfGif:ByteArray;
 		
 		public function ViewportLayer(viewportwidth:Number, viewportHeight:Number, layerWidth:Number, layerHeight:Number)
 		{
@@ -134,6 +136,20 @@ package ui.viewport
 			}
 			_renderViewport(renderSource);
 		}
+        
+        /**
+         * 设置背景图资源 如不更新原图数据则只作预览 GIF
+         */
+        public function setBackgroundSourceGIF(sourceOfGIF:ByteArray, source:BitmapData, updateOriginalSource:Boolean=true):void
+        {
+            var renderSource:BitmapData = _getRenderSource(source);
+            
+            if(updateOriginalSource){
+                _originalSource && _originalSource.dispose();
+                _originalSource = renderSource.clone();
+            }
+            _renderViewport(renderSource);
+        }
 		
 		/**
 		 * 旋转，只支持4个角度 0, 90, 180, 270

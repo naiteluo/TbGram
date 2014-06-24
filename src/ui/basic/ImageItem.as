@@ -12,11 +12,13 @@ package ui.basic
 	import flash.geom.Rectangle;
 	import flash.net.FileReference;
 	import flash.net.URLRequest;
+	import flash.utils.ByteArray;
 	
 	import org.aswing.ASColor;
 	import org.aswing.JPanel;
 	import org.aswing.border.LineBorder;
 	import org.aswing.geom.IntDimension;
+	import org.bytearray.gif.player.GIFPlayer;
 	
 	public class ImageItem extends JPanel
 	{
@@ -30,6 +32,8 @@ package ui.basic
 		public static const STATUS_NOCHANGE:int = 0;	//有原图，没被修改过
 		public static const STATUS_CHANGED:int = 1;		//被修改过
 		
+        private var _inputSource:*;
+        
 		protected var _width:Number = 60;
 		protected var _height:Number = 60;
 		protected var _round:Number = 10;
@@ -47,11 +51,14 @@ package ui.basic
 		protected var _preview:Bitmap;
 		protected var _source:BitmapData;
 		protected var _originalSource:BitmapData;		//原始图片数据
+        protected var _originalSourceOfGIF:ByteArray;   //GIF使用的原图二进制数据
 		protected var _review:Bitmap;
 		protected var _status:Boolean;
 		protected var _isLoaded:Boolean;
 		protected var _isCacheOriginal:Boolean;
 		protected var _sourceStatus:int = -1;				//标识原图是否被修改过 -1 无数据 
+        protected var _isGIF:Boolean = false;                       //标识是否GIF
+        
 		
 		public var index:int = 0;
 		
@@ -73,6 +80,8 @@ package ui.basic
 		)
 		{
 			super(null);
+            
+            _inputSource = source;
 			
 			_width = width;
 			_height = height;
@@ -100,7 +109,8 @@ package ui.basic
 			if(source is String){
 				_loader = new Loader();
 				_loader.contentLoaderInfo.addEventListener(Event.COMPLETE, _imageLoaded);
-				_loader.load(new URLRequest(source));
+                _inputSource = new URLRequest(source);
+				_loader.load(_inputSource);
 			}else if(source is BitmapData){
 				var s:BitmapData = new BitmapData(source.width, source.height);
 				s.copyPixels(source, new Rectangle(0, 0, source.width, source.height), new Point(0, 0));
@@ -114,9 +124,19 @@ package ui.basic
 		protected function _imageLoaded(evt:Event):void
 		{
 			_loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, _imageLoaded);
+            
+            // todo 对gif的特殊处理
+            if (_loader.contentLoaderInfo.contentType == 'image/gif') {
+                _isGIF = true;
+                if (_inputSource is FileReference) {
+                    _originalSourceOfGIF = (_inputSource as FileReference).data;
+                } else if (_inputSource is URLRequest) {
+                    _originalSourceOfGIF = _loader.contentLoaderInfo.bytes;
+                }
+            }
+            
 			_build();
 		}
-		
 		private function _fileReferenceLoad(fr:FileReference):void
 		{
 			fr.addEventListener(Event.COMPLETE, _fileReferenceLoaded);
@@ -150,6 +170,13 @@ package ui.basic
 			this.addEventListener(MouseEvent.ROLL_OUT, _mouseleaveHandler);
 			
 			_isLoaded = true;
+            
+            if (_isGIF) {
+                _preview.visible = false;
+                var gifPlayer:GIFPlayer = new GIFPlayer();
+                gifPlayer.loadBytes(_originalSourceOfGIF);
+                _previewWrap.addChild(gifPlayer);
+            }
 			this.dispatchEvent(new Event(EVENT_LOADED));
 		}
 		protected function _mouseenterHandler(evt:MouseEvent):void
@@ -249,6 +276,14 @@ package ui.basic
 		{
 			return _originalSource;
 		}
+        public function get originalByteArray():ByteArray
+        {
+            return _originalSourceOfGIF;
+        }
+        public function get isGIF():Boolean
+        {
+            return _isGIF;
+        }
 		
 		/**
 		 * 获取图片数据状态 STATUS_NONE、STATUS_NOCHANGE、STATUS_CHANGED

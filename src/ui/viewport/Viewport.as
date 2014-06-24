@@ -8,6 +8,7 @@ package ui.viewport
 	import flash.filters.DropShadowFilter;
 	import flash.geom.ColorTransform;
 	import flash.geom.Rectangle;
+	import flash.utils.ByteArray;
 	
 	import org.aswing.JPanel;
 	
@@ -105,6 +106,40 @@ package ui.viewport
 			layer.setLayerSizeWH(layersWidth, layersHeight);
 			layer.setBackgroundSource(source, updateOriginal);
 		}
+        /***
+         * @desc	设置GIF图片资源
+         * @param	source			{BitmapData}	图片资源
+         * @param	layerIndex		{int}			所在图层
+         * @param	updateOriginal	{Boolean}		是否更新原图数据
+         */
+        public function setSourceOfGIF(sourceOfGIF:ByteArray, source:BitmapData, layerIndex:int, layersWidth:int, layersHeight:int, updateOriginal:Boolean):void
+        {
+            //不能插入0级
+            var layer:ViewportLayer,
+            _layerWidth:Number,
+            _layerHeight:Number;
+            
+            if(layerIndex >= _layersContainer.numChildren){
+                var idx:int = _layersContainer.numChildren;
+                if(idx > 0){
+                    var layerBottom:ViewportLayer = this.getLayerAt(0),
+                        size:Rectangle = layerBottom.layerSize;
+                    _layerWidth = size.width;
+                    _layerHeight = size.height;
+                }else{
+                    _layerWidth = source.width;
+                    _layerHeight = source.height;
+                }
+                layer = this.addLayerAt(_layersContainer.numChildren, _layerWidth, _layerHeight);
+            }else{
+                layer = this.getLayerAt(layerIndex);
+            }
+            
+            layersWidth && (_layerWidth =  layersWidth);
+            layersHeight && (_layerHeight = layersHeight);
+            layer.setLayerSizeWH(layersWidth, layersHeight);
+            layer.setBackgroundSourceGIF(sourceOfGIF, source, updateOriginal);
+        }
 		/**
 		 * 添加一个图层
 		 * @return 添加的层级
@@ -251,5 +286,6 @@ package ui.viewport
 		{
 			this.contains(_loading) && this.removeChild(_loading);
 		}
-	}
+        
+    }
 }
