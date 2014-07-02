@@ -6,11 +6,14 @@ package ui.basic
 	import flash.display.Loader;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.IOErrorEvent;
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.net.FileReference;
+	import flash.net.URLLoader;
+	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
 	
@@ -18,6 +21,7 @@ package ui.basic
 	import org.aswing.JPanel;
 	import org.aswing.border.LineBorder;
 	import org.aswing.geom.IntDimension;
+	import org.bytearray.gif.events.GIFPlayerEvent;
 	import org.bytearray.gif.player.GIFPlayer;
 	
 	public class ImageItem extends JPanel
@@ -125,18 +129,31 @@ package ui.basic
 		{
 			_loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, _imageLoaded);
             
-            // todo 对gif的特殊处理
+            // todo: 对gif的特殊处理
             if (_loader.contentLoaderInfo.contentType == 'image/gif') {
                 _isGIF = true;
                 if (_inputSource is FileReference) {
                     _originalSourceOfGIF = (_inputSource as FileReference).data;
+					_build();
                 } else if (_inputSource is URLRequest) {
-                    _originalSourceOfGIF = _loader.contentLoaderInfo.bytes;
+					var urlLoader:URLLoader = new URLLoader();
+					urlLoader.dataFormat = URLLoaderDataFormat.BINARY;
+					urlLoader.addEventListener(Event.COMPLETE, _onGIFLoaderComplete);
+					
+                    urlLoader.load(_inputSource);
                 }
-            }
-            
+            } else {
+				// todo: 这个_build方法在不同层级的的回调中被调用，不太好
+				_build();
+			}
+		}
+		
+		private function _onGIFLoaderComplete (event:Event):void {
+			_originalSourceOfGIF = event.target.data;
+			// todo: 这个_build方法在不同层级的的回调中被调用，不太好
 			_build();
 		}
+		
 		private function _fileReferenceLoad(fr:FileReference):void
 		{
 			fr.addEventListener(Event.COMPLETE, _fileReferenceLoaded);
@@ -174,7 +191,10 @@ package ui.basic
             if (_isGIF) {
                 _preview.visible = false;
                 var gifPlayer:GIFPlayer = new GIFPlayer();
-                gifPlayer.loadBytes(_originalSourceOfGIF);
+				gifPlayer.addEventListener(GIFPlayerEvent.COMPLETE, function (event:Event) {
+					gifPlayer.resize(_width, _height);
+				});
+				gifPlayer.loadBytes(_originalSourceOfGIF);
                 _previewWrap.addChild(gifPlayer);
             }
 			this.dispatchEvent(new Event(EVENT_LOADED));
