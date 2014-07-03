@@ -23,7 +23,7 @@ package ui.viewport
 		
 		private var _backgroundViewer:Bitmap;				//背景显示图
 		private var _originalSource:BitmapData;				//原图数据
-        private var _priginalSourceOfGif:ByteArray;
+        private var _originalSourceOfGif:ByteArray;
 		
 		public function ViewportLayer(viewportwidth:Number, viewportHeight:Number, layerWidth:Number, layerHeight:Number)
 		{

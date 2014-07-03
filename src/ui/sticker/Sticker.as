@@ -4,12 +4,20 @@ package ui.sticker
     
     import flash.display.Bitmap;
     import flash.display.BitmapData;
+    import flash.display.DisplayObject;
     import flash.display.Loader;
     import flash.events.Event;
     import flash.geom.Point;
     import flash.geom.Rectangle;
+    import flash.net.FileReference;
+    import flash.net.URLLoader;
+    import flash.net.URLLoaderDataFormat;
     import flash.net.URLRequest;
+    import flash.utils.ByteArray;
     
+    import org.bytearray.gif.player.GIFPlayer;
+    
+    import ui.basic.GIFComponent;
     import ui.basic.MyTransformer;
     import ui.viewport.Viewport;
     
@@ -31,6 +39,11 @@ package ui.sticker
         private var _maxScale:Number;
         private var _parent:Viewport;
         private var _isReady:Boolean = false;			//资源是否加载完毕
+		
+		private var _urlLoader:URLLoader;
+		private var _isGIF:Boolean;
+		private var _originalSourceOfGIF:ByteArray;
+		private var _gifPlayer:GIFPlayer;
         
         public function Sticker(
             parent:Viewport,
@@ -49,27 +62,50 @@ package ui.sticker
             super();
             
             _loader.load(new URLRequest(_itemConfig.url));
+			
         }
         
         private function _imageLoaded(event:Event):void
         {
             event.target.removeEventListener(Event.COMPLETE, _imageLoaded);
             
-            this.init(
-                _loader, _loader.content.width, _loader.content.height, 
-                _parent, _getViewportScale(_defaultScale), _currentRotation, 
-                _getViewportScale(_minScale), _getViewportScale(_maxScale)
-            );
-            
-            _container.x = _parent.width / 2;
-            _container.y = _parent.height / 2;
-            
-            _parent.addEventListener(Event.CHANGE, _targetChangeHandler);
-            
-            this._isReady = true;
-            this.active = true;
-            this.dispatchEvent(new Event(EVENT_READY));
+            if (_loader.contentLoaderInfo.contentType == 'image/gif') {
+				_isGIF = true;
+				_urlLoader = new URLLoader();
+				_urlLoader.dataFormat = URLLoaderDataFormat.BINARY;
+				_urlLoader.addEventListener(Event.COMPLETE, _onGIFLoaderComplete);
+				_urlLoader.load(new URLRequest(_itemConfig.url));
+			} else {
+				_build(_loader);
+			}
         }
+		
+		private function _onGIFLoaderComplete(event:Event):void
+		{
+			_gifPlayer = new GIFPlayer();
+			_originalSourceOfGIF = event.target.data;
+			_gifPlayer.loadBytes(_originalSourceOfGIF);
+			_build(_gifPlayer);
+		}
+		
+		private function _build(displayObject:DisplayObject):void 
+		{
+			this.init(
+				displayObject, _loader.content.width, _loader.content.height, 
+				_parent, _getViewportScale(_defaultScale), _currentRotation, 
+				_getViewportScale(_minScale), _getViewportScale(_maxScale)
+			);
+			
+			_container.x = _parent.width / 2;
+			_container.y = _parent.height / 2;
+			
+			_parent.addEventListener(Event.CHANGE, _targetChangeHandler);
+			
+			this._isReady = true;
+			this.active = true;
+			this.dispatchEvent(new Event(EVENT_READY));
+		}
+		
         private function _getViewportScale(scale:Number):Number
         {
             return scale * _parent.viewportScale;
@@ -88,13 +124,34 @@ package ui.sticker
          */
         public function get source():BitmapData
         {
-            return ((_target as Loader).content as Bitmap).bitmapData;
+			if (this.isGIF) {
+				return (_target as GIFPlayer).frames[0];
+			} else {
+				return ((_target as Loader).content as Bitmap).bitmapData;
+			}
         }
+		
+		public function get sourceOfGIF():ByteArray
+		{
+			_originalSourceOfGIF.position = 0;
+			return _originalSourceOfGIF;
+		}
+		
+		public function get isGIF():Boolean
+		{
+			return _isGIF;
+		}
         /**
          * 合成到原图
          */
         public function merge():void
         {
+			if (this.isGIF) {
+				mergeGIF();
+			} else {
+				mergeNormal();
+			}
+			
             var rect:Rectangle = this.currentOriginalRect;
             var tempSource:BitmapData = ImageMerger.merge(
                 _parent.getOriginalSourceCopyAt(0), 
@@ -108,6 +165,46 @@ package ui.sticker
             );
             _parent.setSource(tempSource, 0, tempSource.width, tempSource.height, true);
         }
+		
+		public function mergeGIF():void
+		{
+			var rect:Rectangle = this.currentOriginalRect;
+			var tempSource:ByteArray = ImageMerger.GIFMerge(
+				_parent.getOriginalSourceCopyAt(0), 
+				this.sourceOfGIF, rect,
+				this.currentScale,
+				this.currentScale,
+				this.currentRotation,
+				this.currentAlpha,
+				this.isFlipedH,
+				this.isFlipedV
+			);
+			tempSource.position = 0;
+			var gifPlayer:GIFPlayer = new GIFPlayer();
+			gifPlayer.loadBytes(tempSource);
+			var bmd:BitmapData = gifPlayer.frames[0];
+			
+			tempSource.position = 0;
+			
+			_parent.setSourceOfGIF(tempSource, bmd, 0, bmd.width, bmd.height, true);
+		}
+		
+		public function mergeNormal():void
+		{
+			var rect:Rectangle = this.currentOriginalRect;
+			var tempSource:BitmapData = ImageMerger.merge(
+				_parent.getOriginalSourceCopyAt(0), 
+				this.source, rect,
+				this.currentScale,
+				this.currentScale,
+				this.currentRotation,
+				this.currentAlpha,
+				this.isFlipedH,
+				this.isFlipedV
+			);
+			_parent.setSource(tempSource, 0, tempSource.width, tempSource.height, true);
+		}
+		
         public function get currentOriginalRect():Rectangle
         {
             var centerPoint:Point = _getCenterPoint(),
@@ -137,7 +234,11 @@ package ui.sticker
          */
         override public function dispose():void
         {
-            (_target as Loader).unloadAndStop(true);
+            if (!this.isGIF) {
+				(_target as Loader).unloadAndStop(true);
+			} else {
+				(_target as GIFPlayer).dispose();
+			}
             
             _parent.removeEventListener(Event.CHANGE, _targetChangeHandler);
             

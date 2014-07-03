@@ -452,7 +452,6 @@ package ui.basic
 			
 			_target.transform.matrix = m1;
 			_uilayer.transform.matrix = m2;
-			trace('MyTransformer::setTransform -- ', scale);
 			_renderUI();
 		}
 		
